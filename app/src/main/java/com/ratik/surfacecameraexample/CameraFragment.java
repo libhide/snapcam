@@ -3,6 +3,7 @@ package com.ratik.surfacecameraexample;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Camera;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -85,7 +86,8 @@ public class CameraFragment extends Fragment {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // get an image from the camera
+                        // Play sound
+                        MediaPlayer.create(getActivity(), R.raw.shutter).start();
                         mCamera.takePicture(null, null, mPicture);
                     }
                 }
@@ -448,8 +450,6 @@ public class CameraFragment extends Fragment {
         File mediaFile;
         mediaFile = new File(mediaStorageDir.getPath() + File.separator +
                 "IMG_" + timeStamp + ".jpg");
-
-        // DialogHelper.showDialog("Success!","Your picture has been saved!", getActivity());
 
         return mediaFile;
     }
