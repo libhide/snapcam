@@ -397,31 +397,6 @@ public class CameraFragment extends Fragment {
             Intent intent = new Intent(getActivity(), EditImageActivity.class);
             intent.putExtra("image", data);
             startActivity(intent);
-
-
-//            File pictureFile = getOutputMediaFile();
-//            if (pictureFile == null) {
-//                Toast.makeText(getActivity(), "Image retrieval failed.", Toast.LENGTH_SHORT)
-//                        .show();
-//                return;
-//            }
-//
-//            try {
-//                FileOutputStream fos = new FileOutputStream(pictureFile);
-//                fos.write(data);
-//                fos.close();
-//
-//                // Refresh phone media to show image
-//                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//                mediaScanIntent.setData(Uri.fromFile(pictureFile));
-//                getActivity().sendBroadcast(mediaScanIntent);
-//
-//                mCamera.startPreview();
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
         }
     };
 }

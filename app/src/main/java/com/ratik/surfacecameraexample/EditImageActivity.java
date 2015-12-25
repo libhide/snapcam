@@ -45,27 +45,27 @@ public class EditImageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 File pictureFile = getOutputMediaFile();
                 if (pictureFile == null) {
-                Toast.makeText(EditImageActivity.this, "Image retrieval failed.", Toast.LENGTH_SHORT)
-                        .show();
-                return;
-            }
+                    Toast.makeText(EditImageActivity.this, "Image retrieval failed.", Toast.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
 
-            try {
-                FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(imageData);
-                fos.close();
+                try {
+                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    fos.write(imageData);
+                    fos.close();
 
-                // Refresh phone media to show image
-                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                mediaScanIntent.setData(Uri.fromFile(pictureFile));
-                sendBroadcast(mediaScanIntent);
+                    // Refresh phone media to show image
+                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    mediaScanIntent.setData(Uri.fromFile(pictureFile));
+                    sendBroadcast(mediaScanIntent);
 
-                finish();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                    finish();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
