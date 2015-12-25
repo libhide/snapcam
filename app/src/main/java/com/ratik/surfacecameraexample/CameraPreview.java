@@ -1,5 +1,6 @@
 package com.ratik.surfacecameraexample;
 
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
@@ -9,11 +10,14 @@ import android.view.SurfaceView;
 import java.io.IOException;
 import java.util.List;
 
-/** A basic Camera preview class */
+/**
+ * A basic Camera preview class
+ */
 @SuppressWarnings("deprecation")
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final String TAG = CameraPreview.class.getSimpleName();
+    private Context context;
     private SurfaceHolder holder;
     private Camera camera;
 
@@ -22,6 +26,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
+        this.context = context;
         this.camera = camera;
 
         // Install a SurfaceHolder.Callback so we get notified when the
@@ -51,7 +56,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
 
-        if (this.holder.getSurface() == null){
+        if (this.holder.getSurface() == null) {
             // preview surface does not exist
             return;
         }
@@ -59,7 +64,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // stop preview before making changes
         try {
             camera.stopPreview();
-        } catch (Exception e){
+        } catch (Exception e) {
             // ignore: tried to stop a non-existent preview
         }
 
@@ -71,14 +76,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         camera.setParameters(parameters);
 
         // Manually setting orientation for now
-        camera.setDisplayOrientation(90);
+        // TODO: listen for device rotation events and set this
+        CameraHelper.setCameraDisplayOrientation((Activity) context,
+                CameraHelper.CURRENT_CAMERA_ID, camera);
 
         // start preview with new settings
         try {
             camera.setPreviewDisplay(this.holder);
             camera.startPreview();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
@@ -94,7 +101,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    // Helper method
+    // Helper methods
+
     private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) h / w;

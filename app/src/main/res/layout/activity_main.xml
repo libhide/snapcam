@@ -32,15 +32,11 @@
             android:contentDescription="@string/content_desc_shutter"
             android:src="@drawable/shutter" />
 
-        <ImageButton
-            android:id="@+id/switchCameraButton"
+        <View
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="20dp"
             android:layout_gravity="center"
-            android:layout_weight="1"
-            android:background="@null"
-            android:src="@drawable/ic_rotate" />
-
+            android:layout_weight="1" />
 
     </LinearLayout>
 

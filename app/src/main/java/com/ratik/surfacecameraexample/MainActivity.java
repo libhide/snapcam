@@ -10,6 +10,7 @@ import android.widget.ImageButton;
 public class MainActivity extends AppCompatActivity {
 
     private ImageButton shutterButton;
+    private ImageButton rotateButton;
 
     private Camera camera;
     private CameraPreview cameraPreview;
