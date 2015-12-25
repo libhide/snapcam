@@ -5,9 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -17,8 +15,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by Ratik on 25/12/15.
@@ -33,17 +29,17 @@ public class EditImageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_image);
 
         Intent intent = getIntent();
-        final byte[] imageData = intent.getByteArrayExtra("image");
-        Bitmap bmp = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+        final byte[] data = intent.getByteArrayExtra("bitmap");
 
         ImageView mainImageView = (ImageView) findViewById(R.id.mainImage);
-        mainImageView.setImageBitmap(bmp);
+        final Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        mainImageView.setImageBitmap(bitmap);
 
         ImageButton saveButton = (ImageButton) findViewById(R.id.saveButton);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File pictureFile = getOutputMediaFile();
+                File pictureFile = FileHelper.getOutputMediaFile();
                 if (pictureFile == null) {
                     Toast.makeText(EditImageActivity.this, "Image retrieval failed.", Toast.LENGTH_SHORT)
                             .show();
@@ -52,7 +48,7 @@ public class EditImageActivity extends AppCompatActivity {
 
                 try {
                     FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(imageData);
+                    fos.write(data);
                     fos.close();
 
                     // Refresh phone media to show image
@@ -76,31 +72,5 @@ public class EditImageActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    /**
-     * Used to return the camera File output.
-     *
-     * @return
-     */
-    private File getOutputMediaFile() {
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "SnapCam");
-
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d(TAG, "Required media storage does not exist");
-                return null;
-            }
-        }
-
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File mediaFile;
-        mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                "IMG_" + timeStamp + ".jpg");
-
-        return mediaFile;
     }
 }
