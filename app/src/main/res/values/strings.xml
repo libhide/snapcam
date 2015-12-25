@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SurfaceCameraExample</string>
+    <string name="content_desc_shutter">Camera shutter button</string>
+</resources>
