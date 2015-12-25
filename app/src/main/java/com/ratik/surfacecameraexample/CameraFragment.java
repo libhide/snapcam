@@ -1,7 +1,9 @@
 package com.ratik.surfacecameraexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -200,6 +202,8 @@ public class CameraFragment extends Fragment {
             mHolder.setKeepScreenOn(true);
             // deprecated setting, but required on Android versions prior to 3.0
             mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+            mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         }
 
         /**
@@ -259,54 +263,41 @@ public class CameraFragment extends Fragment {
             }
         }
 
-        /**
-         * React to surface changed events
-         *
-         * @param holder
-         * @param format
-         * @param w
-         * @param h
-         */
         public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
             // If your preview can change or rotate, take care of those events here.
             // Make sure to stop the preview before resizing or reformatting it.
 
-            if (mHolder.getSurface() == null) {
+            if (this.mHolder.getSurface() == null) {
                 // preview surface does not exist
                 return;
             }
 
-            requestLayout();
-
             // stop preview before making changes
             try {
-                Camera.Parameters parameters = mCamera.getParameters();
-
-                // Set the auto-focus mode to "continuous"
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-
-                // Preview size must exist.
-                if (mPreviewSize != null) {
-                    Camera.Size previewSize = mPreviewSize;
-                    parameters.setPreviewSize(previewSize.width, previewSize.height);
-                }
-
-                mCamera.setParameters(parameters);
-                mCamera.startPreview();
+                mCamera.stopPreview();
             } catch (Exception e) {
-                e.printStackTrace();
+                // ignore: tried to stop a non-existent preview
+            }
+
+            // set preview size and make any resize, rotate or
+            // reformatting changes here
+
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+            mCamera.setParameters(parameters);
+
+            // start preview with new settings
+            try {
+                mCamera.setPreviewDisplay(this.mHolder);
+                mCamera.startPreview();
+
+            } catch (Exception e) {
+                Log.d(TAG, "Error starting camera preview: " + e.getMessage());
             }
         }
 
-        /**
-         * Calculate the measurements of the layout
-         *
-         * @param widthMeasureSpec
-         * @param heightMeasureSpec
-         */
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            // Source: http://stackoverflow.com/questions/7942378/android-camera-will-not-work-startpreview-fails
             final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
             final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
             setMeasuredDimension(width, height);
@@ -314,6 +305,40 @@ public class CameraFragment extends Fragment {
             if (mSupportedPreviewSizes != null) {
                 mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
             }
+        }
+
+        // Helper methods
+
+        private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+            final double ASPECT_TOLERANCE = 0.1;
+            double targetRatio = (double) h / w;
+
+            if (sizes == null) return null;
+
+            Camera.Size optimalSize = null;
+            double minDiff = Double.MAX_VALUE;
+
+            int targetHeight = h;
+
+            for (Camera.Size size : sizes) {
+                double ratio = (double) size.width / size.height;
+                if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+
+            if (optimalSize == null) {
+                minDiff = Double.MAX_VALUE;
+                for (Camera.Size size : sizes) {
+                    if (Math.abs(size.height - targetHeight) < minDiff) {
+                        optimalSize = size;
+                        minDiff = Math.abs(size.height - targetHeight);
+                    }
+                }
+            }
+            return optimalSize;
         }
 
         /**
@@ -365,37 +390,6 @@ public class CameraFragment extends Fragment {
                 mCameraView.layout(0, height - scaledChildHeight, width, height);
             }
         }
-
-        /**
-         * @param sizes
-         * @param width
-         * @param height
-         * @return
-         */
-        private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int width, int height) {
-            // Source: http://stackoverflow.com/questions/7942378/android-camera-will-not-work-startpreview-fails
-            Camera.Size optimalSize = null;
-
-            final double ASPECT_TOLERANCE = 0.1;
-            double targetRatio = (double) height / width;
-
-            // Try to find a size match which suits the whole screen minus the menu on the left.
-            for (Camera.Size size : sizes) {
-
-                if (size.height != width) continue;
-                double ratio = (double) size.width / size.height;
-                if (ratio <= targetRatio + ASPECT_TOLERANCE && ratio >= targetRatio - ASPECT_TOLERANCE) {
-                    optimalSize = size;
-                }
-            }
-
-            // If we cannot find the one that matches the aspect ratio, ignore the requirement.
-            if (optimalSize == null) {
-                // TODO : Backup in case we don't get a size.
-            }
-
-            return optimalSize;
-        }
     }
 
     /**
@@ -418,8 +412,12 @@ public class CameraFragment extends Fragment {
                 fos.write(data);
                 fos.close();
 
-                // Restart the camera preview.
-                safeCameraOpenInView(mCameraView);
+                // Refresh phone media to show image
+                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                mediaScanIntent.setData(Uri.fromFile(pictureFile));
+                getActivity().sendBroadcast(mediaScanIntent);
+
+                mCamera.startPreview();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
